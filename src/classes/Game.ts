@@ -5,34 +5,49 @@ type Action = "Right" | "Left" | "Up" | "Down";
 
 export class Game {
   private playground: Playground;
+  private uncapturedTiles: number;
   private player1: Player;
   private player2: Player;
 
   constructor(
     playground: Playground,
-    player1StartingTile = { x: 0, y: 0 },
-    player2StartingTile = { x: 3, y: 3 }
-  ) {
-    this.playground = playground;
-    this.player1 = {
+    uncapturedTiles: number = 14,
+    player1: Player = {
       name: "Player",
       score: 0,
       steps: [],
-      currentTile: player1StartingTile,
-    };
-    this.player2 = {
+      currentTile: { x: 0, y: 0 },
+    },
+    player2: Player = {
       name: "AI",
       score: 0,
       steps: [],
-      currentTile: player2StartingTile,
-    };
+      currentTile: { x: 3, y: 3 },
+    }
+  ) {
+    this.playground = playground;
+    this.uncapturedTiles = uncapturedTiles;
+    this.player1 = player1;
+    this.player2 = player2;
+  }
+  copy() {
+    return new Game(
+      this.playground.map((row) =>
+        row.map((tile) => {
+          return { ...tile };
+        })
+      ),
+      this.uncapturedTiles,
+      { ...this.player1 },
+      { ...this.player2 }
+    );
   }
 
   private move(playerNumber: 1 | 2, action: Action): void {
     const player = playerNumber === 1 ? this.player1 : this.player2;
     const rival = playerNumber === 1 ? this.player2 : this.player1;
 
-    const to: Coordinate = this._getConsequences(player.currentTile)[action];
+    const to: Coordinate = this.getConsequences(player.currentTile)[action];
 
     if (to.x < 0 || to.y < 0 || to.x > 3 || to.y > 3)
       throw new Error("P1move: impossible action");
@@ -46,11 +61,12 @@ export class Game {
       if (!this.playground[to.x][to.y].captured) {
         player.score += this.playground[to.x][to.y].score;
         this.playground[to.x][to.y].captured = true;
+        this.uncapturedTiles--;
       }
     }
   }
 
-  private _getConsequences(from: Coordinate) {
+  private getConsequences(from: Coordinate) {
     return {
       Right: { x: from.x + 1, y: from.y },
       Left: { x: from.x - 1, y: from.y },
@@ -59,21 +75,68 @@ export class Game {
     };
   }
 
-  getPossibleActions() {
-    const consequences = this._getConsequences(this.player1.currentTile);
+  getPossibleActions(playerNumber: 1 | 2 = 1): Action[] {
+    const player = playerNumber === 1 ? this.player1 : this.player2;
+    const rival = playerNumber === 1 ? this.player2 : this.player1;
 
-    return ["Right", "Left", "Up", "Down"].filter(
+    const consequences = this.getConsequences(player.currentTile);
+
+    const allActions: Action[] = ["Right", "Left", "Up", "Down"];
+    return allActions.filter(
       (action) =>
         consequences[action].x >= 0 &&
         consequences[action].x <= 3 &&
         consequences[action].y >= 0 &&
         consequences[action].y <= 3 &&
-        consequences[action].x !== this.player2.currentTile.x &&
-        consequences[action].y !== this.player2.currentTile.y
+        consequences[action].x !== rival.currentTile.x &&
+        consequences[action].y !== rival.currentTile.y
     );
   }
 
+  private isTerminal(): boolean {
+    return this.uncapturedTiles === 0;
+  }
+
+  private calculateBestAction(): Action {}
+
+  private static bestAction(
+    player: 1 | 2,
+    state: Game,
+    allowedDepth: number
+    // alpha: number | "minusInfinit" = "minusInfinit",
+    // beta: number | "plusInfinit" = "plusInfinit"
+  ): { action: Action | null; value: number } {
+    const rival = player === 1 ? 2 : 1;
+
+    if (state.isTerminal())
+      return { action: null, value: state[`player${player}`].score };
+
+    if (allowedDepth < 0) return { action: null, value: 2 }; //TODO: needs heuristic value
+
+    const possibleActions = state.getPossibleActions(player);
+    let bestAction: { action: Action | null; value: number } = null;
+    possibleActions.forEach((action) => {
+      const copiedState = state.copy();
+      copiedState.move(player, action);
+      const bestRivalAction = Game.bestAction(
+        rival,
+        copiedState,
+        allowedDepth - 1
+      );
+      if (bestAction && bestAction.value < bestRivalAction.value) {
+        bestAction = bestRivalAction;
+      } else {
+        bestAction = bestRivalAction;
+      }
+    });
+  }
+
   performAction(action: Action) {
-    this.move(1,action);
+    this.move(1, action);
+    // this.move(2,)
+  }
+  getState() {}
+  isFinished() {
+    return this.isTerminal();
   }
 }

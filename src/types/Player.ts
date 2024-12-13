@@ -1,6 +1,13 @@
+import { Coordinate } from "./pleayground";
+
 export type step = {
-  from: { x: number; y: number };
-  to: { x: number; y: number };
+  from: Coordinate;
+  to: Coordinate;
 };
 
-export type Player = { name: string; totalScore: number; steps: step[] };
+export type Player = {
+  name: string;
+  totalScore: number;
+  steps: step[];
+  startTile: Coordinate;
+};

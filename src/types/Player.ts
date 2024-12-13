@@ -1,4 +1,4 @@
-import { Coordinate } from "./pleayground";
+import { Coordinate } from "./Playground";
 
 export type step = {
   from: Coordinate;
@@ -9,5 +9,5 @@ export type Player = {
   name: string;
   totalScore: number;
   steps: step[];
-  startTile: Coordinate;
+  currentTile: Coordinate;
 };

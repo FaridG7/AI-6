@@ -1,4 +1,4 @@
-import { Playground } from "./types/pleayground";
+import { Playground } from "./types/Playground";
 
 const testPlayground: Playground = [
   [

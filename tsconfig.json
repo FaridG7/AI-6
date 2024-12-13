@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "Node16", // Use ES Modules
+    "target": "ES6", // Target ECMAScript 6
+    "moduleResolution": "node16", // Use Node.js module resolution for ES Modules
+    "esModuleInterop": true, // Ensure compatibility with CommonJS
+    "skipLibCheck": true // Skip type checking of declaration files
+  },
+  "include": [
+    "src/**/*.ts" // Specify the folder to include your TypeScript files
+  ]
+}

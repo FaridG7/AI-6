@@ -4,9 +4,9 @@ import { Coordinate, Playground } from "../types/Playground";
 type Action = "Right" | "Left" | "Up" | "Down";
 
 export class Game {
-  playground: Playground;
-  player1: Player;
-  player2: Player;
+  private playground: Playground;
+  private player1: Player;
+  private player2: Player;
 
   constructor(
     playground: Playground,
@@ -28,8 +28,8 @@ export class Game {
     };
   }
 
-  P1move(action: Action) {
-    const to: Coordinate = this._getPossibleActions(this.player1.currentTile)[
+  private P1move(action: Action) {
+    const to: Coordinate = this._getConsequences(this.player1.currentTile)[
       action
     ];
 
@@ -50,8 +50,8 @@ export class Game {
     }
   }
 
-  P2move(action: Action) {
-    const to: Coordinate = this._getPossibleActions(this.player2.currentTile)[
+  private P2move(action: Action) {
+    const to: Coordinate = this._getConsequences(this.player2.currentTile)[
       action
     ];
 
@@ -72,13 +72,27 @@ export class Game {
     }
   }
 
-  _getPossibleActions(from: Coordinate) {
+  private _getConsequences(from: Coordinate) {
     return {
       Right: { x: from.x + 1, y: from.y },
       Left: { x: from.x - 1, y: from.y },
       Up: { x: from.x, y: from.y - 1 },
       Down: { x: from.x, y: from.y + 1 },
     };
+  }
+
+  getPossibleActions() {
+    const consequences = this._getConsequences(this.player1.currentTile);
+
+    return ["Right", "Left", "Up", "Down"].filter(
+      (action) =>
+        consequences[action].x >= 0 &&
+        consequences[action].x <= 3 &&
+        consequences[action].y >= 0 &&
+        consequences[action].y <= 3 &&
+        consequences[action].x !== this.player2.currentTile.x &&
+        consequences[action].y !== this.player2.currentTile.y
+    );
   }
 
   

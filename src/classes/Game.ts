@@ -16,59 +16,37 @@ export class Game {
     this.playground = playground;
     this.player1 = {
       name: "Player",
-      totalScore: 0,
+      score: 0,
       steps: [],
       currentTile: player1StartingTile,
     };
     this.player2 = {
       name: "AI",
-      totalScore: 0,
+      score: 0,
       steps: [],
       currentTile: player2StartingTile,
     };
   }
 
-  private P1move(action: Action) {
-    const to: Coordinate = this._getConsequences(this.player1.currentTile)[
-      action
-    ];
+  private move(playerNumber: 1 | 2, action: Action): void {
+    const player = playerNumber === 1 ? this.player1 : this.player2;
+    const rival = playerNumber === 1 ? this.player2 : this.player1;
+
+    const to: Coordinate = this._getConsequences(player.currentTile)[action];
 
     if (to.x < 0 || to.y < 0 || to.x > 3 || to.y > 3)
       throw new Error("P1move: impossible action");
-    else if (
-      to.x === this.player2.currentTile.x &&
-      to.y === this.player2.currentTile.y
-    )
+    else if (to.x === rival.currentTile.x && to.y === rival.currentTile.y)
       throw new Error("P1move: P2 is blocking you");
-    else if (
-      to.x === this.player1.currentTile.x &&
-      to.y === this.player1.currentTile.y
-    )
+    else if (to.x === player.currentTile.x && to.y === player.currentTile.y)
       throw new Error("P1move: you can't stay still");
     else {
-      this.player1.currentTile = { ...to };
-    }
-  }
-
-  private P2move(action: Action) {
-    const to: Coordinate = this._getConsequences(this.player2.currentTile)[
-      action
-    ];
-
-    if (to.x < 0 || to.y < 0 || to.x > 3 || to.y > 3)
-      throw new Error("P2move: impossible action");
-    else if (
-      to.x === this.player1.currentTile.x &&
-      to.y === this.player1.currentTile.y
-    )
-      throw new Error("P2move: P1 is blocking you");
-    else if (
-      to.x === this.player2.currentTile.x &&
-      to.y === this.player2.currentTile.y
-    )
-      throw new Error("P2move: you can't stay still");
-    else {
-      this.player2.currentTile = { ...to };
+      player.steps.push({ from: player.currentTile, to: to });
+      player.currentTile = { ...to };
+      if (!this.playground[to.x][to.y].captured) {
+        player.score += this.playground[to.x][to.y].score;
+        this.playground[to.x][to.y].captured = true;
+      }
     }
   }
 
@@ -95,5 +73,7 @@ export class Game {
     );
   }
 
-  
+  performAction(action: Action) {
+    this.move(1,action);
+  }
 }

@@ -7,7 +7,7 @@ export type step = {
 
 export type Player = {
   name: string;
-  totalScore: number;
+  score: number;
   steps: step[];
   currentTile: Coordinate;
 };

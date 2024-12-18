@@ -1,4 +1,4 @@
-import { Playground } from "./types/Playground";
+import { Playground } from "./assets/types/Playground";
 
 const testPlayground: Playground = [
   [

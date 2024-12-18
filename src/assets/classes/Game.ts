@@ -30,6 +30,7 @@ export class Game {
     this.player1 = player1;
     this.player2 = player2;
   }
+  
   copy() {
     return new Game(
       this.playground.map((row) =>
@@ -97,7 +98,7 @@ export class Game {
     return this.uncapturedTiles === 0;
   }
 
-  private calculateBestAction(player: 1 | 2): Action {
+  private calculateBestAction(player: 1 | 2): Action | null{
     return Game.max(player, this, 3).action;
   }
 
@@ -105,8 +106,8 @@ export class Game {
     player: 1 | 2,
     state: Game,
     allowedDepth: number,
-    alpha: number | "minusInfinit" = "minusInfinit",
-    beta: number | "plusInfinit" = "plusInfinit"
+    // alpha: number | "minusInfinit" = "minusInfinit",
+    // beta: number | "plusInfinit" = "plusInfinit"
   ): { action: Action | null; value: number } {
     if (state.isTerminal())
       return {
@@ -131,8 +132,8 @@ export class Game {
     player: 1 | 2,
     state: Game,
     allowedDepth: number,
-    alpha: number | "minusInfinit" = "minusInfinit",
-    beta: number | "plusInfinit" = "plusInfinit"
+    // alpha: number | "minusInfinit" = "minusInfinit",
+    // beta: number | "plusInfinit" = "plusInfinit"
   ): { action: Action | null; value: number } {
     if (state.isTerminal())
       return {
@@ -152,6 +153,7 @@ export class Game {
 
     return branches.reduce((pre, cur) => (pre.value < cur.value ? pre : cur));
   }
+
   performAction(action: Action) {
     this.move(1, action);
     const bestP2Action = this.calculateBestAction(2);

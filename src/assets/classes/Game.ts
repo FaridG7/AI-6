@@ -2,6 +2,12 @@ import { Player } from "../types/Player";
 import { Coordinate, Playground } from "../types/Playground";
 
 type Action = "Right" | "Left" | "Up" | "Down";
+export type State = {
+  player1: Player;
+  player2: Player;
+  playground: Playground;
+  possibleActions: Action[];
+};
 
 export class Game {
   private playground: Playground;
@@ -30,7 +36,7 @@ export class Game {
     this.player1 = player1;
     this.player2 = player2;
   }
-  
+
   copy() {
     return new Game(
       this.playground.map((row) =>
@@ -61,7 +67,7 @@ export class Game {
       player.currentTile = { ...to };
       if (!this.playground[to.x][to.y].captured) {
         player.score += this.playground[to.x][to.y].score;
-        this.playground[to.x][to.y].captured = true;
+        this.playground[to.x][to.y].captured = playerNumber;
         this.uncapturedTiles--;
       }
     }
@@ -98,14 +104,14 @@ export class Game {
     return this.uncapturedTiles === 0;
   }
 
-  private calculateBestAction(player: 1 | 2): Action | null{
+  private calculateBestAction(player: 1 | 2): Action | null {
     return Game.max(player, this, 3).action;
   }
 
   private static max(
     player: 1 | 2,
     state: Game,
-    allowedDepth: number,
+    allowedDepth: number
     // alpha: number | "minusInfinit" = "minusInfinit",
     // beta: number | "plusInfinit" = "plusInfinit"
   ): { action: Action | null; value: number } {
@@ -131,7 +137,7 @@ export class Game {
   private static min(
     player: 1 | 2,
     state: Game,
-    allowedDepth: number,
+    allowedDepth: number
     // alpha: number | "minusInfinit" = "minusInfinit",
     // beta: number | "plusInfinit" = "plusInfinit"
   ): { action: Action | null; value: number } {
@@ -141,7 +147,7 @@ export class Game {
         value: state[`player${player}`].score,
       };
 
-    if (allowedDepth < 0) return { action: null, value: 2 }; //TODO: needs heuristic value(it should be calculated based on mode too)
+    if (allowedDepth < 0) return { action: null, value: 2 }; //TODO: needs heuristic value
 
     const possibleActions = state.getPossibleActions(player);
 
@@ -163,7 +169,14 @@ export class Game {
         "performAction: trying to perform an action while the game is finished"
       );
   }
-  getState() {}
+  getState(): State {
+    return {
+      player1: this.player1,
+      player2: this.player2,
+      playground: this.playground,
+      possibleActions: this.getPossibleActions(),
+    };
+  }
   isFinished() {
     return this.isTerminal();
   }

@@ -1,53 +1,107 @@
 import { FC, useRef, useState } from "react";
-import { Game, State } from "./assets/classes/Game";
+import { Action, Game, State } from "./assets/classes/Game";
 import { getPlayground } from "./getPlayground";
 
 const App: FC = () => {
   const { current: game } = useRef(new Game(getPlayground()));
   const [{ player1, player2, playground, possibleActions }, setState] =
     useState<State>(game.getState());
+
+  const act = (action: Action) => {
+    game.performAction(action);
+    return game.getState();
+  };
+
   return (
     <>
-      <h1 className="">Title</h1>
+      <h1 className="bg-red-700 text-center text-4xl py-3">Beat AI</h1>
       <div id="scoreboard">
-        <span>
+        <span className="text-center block text-xl m-3">
           {player1.name}: {player1.score}
         </span>
-        <span>
+        <span className="text-center block text-xl m-3">
           {player2.name}: {player2.score}
         </span>
       </div>
-      <div id="board">
-        <table>
-          {playground.map((row) => {
-            return (
-              <tr>
-                {row.map((tile) => (
-                  <td className="">
-                    {tile.captured == null ? tile.score : null}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
+      <div id="board" className="flex items-center justify-center">
+        <table className="border border-separate border-slate-200 text-xl">
+          <tbody>
+            {playground.map((row, y) => {
+              return (
+                <tr key={y}>
+                  {row.map((tile, x) => {
+                    const isPlayer1 =
+                      x === player1.currentTile.x &&
+                      y === player1.currentTile.y;
+                    const isPlayer2 =
+                      x === player2.currentTile.x &&
+                      y === player2.currentTile.y;
+
+                    return (
+                      <td
+                        className={`px-5 py-3 ${
+                          isPlayer1 || tile.captured === 1
+                            ? "bg-orange-600"
+                            : isPlayer2 || tile.captured === 2
+                            ? "bg-blue-600"
+                            : null
+                        }`}
+                        key={`${x}${y}`}
+                      >
+                        {tile.captured == null
+                          ? tile.score
+                          : isPlayer1
+                          ? "P1"
+                          : isPlayer2
+                          ? "P2"
+                          : null}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
         </table>
       </div>
-      <div id="controller">
-        <button disabled={!possibleActions.includes("Up")}>
-          <span className="text-xl text-red-500">&#8593;</span>
-          {/*Up*/}
+      <div
+        id="controller"
+        className="grid grid-cols-9 grid-rows-3 gap-2 p-20  place-items-center"
+      >
+        {/* Up Button */}
+        <button
+          disabled={!possibleActions.includes("Up")}
+          className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-1 col-start-5 text-center w-12 h-12 rounded-full flex items-center justify-center"
+          onClick={() => setState(act("Up"))}
+        >
+          <span className="text-xl">&#8593;</span>
         </button>
-        <button disabled={!possibleActions.includes("Left")}>
-          <span className="text-xl text-blue-500">&#8592;</span>
-          {/*Left*/}
+
+        {/* Left Button */}
+        <button
+          disabled={!possibleActions.includes("Left")}
+          className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-2 col-start-4 text-center w-12 h-12 rounded-full flex items-center justify-center"
+          onClick={() => setState(act("Left"))}
+        >
+          <span className="text-xl">&#8592;</span>
         </button>
-        <button disabled={!possibleActions.includes("Right")}>
-          <span className="text-xl text-green-500">&#8594;</span>
-          {/*Right*/}
+
+        {/* Right Button */}
+        <button
+          disabled={!possibleActions.includes("Right")}
+          className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-2 col-start-6 text-center w-12 h-12 rounded-full flex items-center justify-center"
+          onClick={() => setState(act("Right"))}
+        >
+          <span className="text-xl">&#8594;</span>
         </button>
-        <button disabled={!possibleActions.includes("Down")}>
-          <span className="text-xl text-yellow-500">&#8595;</span>
-          {/*Down*/}
+
+        {/* Down Button */}
+        <button
+          disabled={!possibleActions.includes("Down")}
+          className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-3 col-start-5 text-center w-12 h-12 rounded-full flex items-center justify-center"
+          onClick={() => setState(act("Down"))}
+        >
+          <span className="text-xl">&#8595;</span>
         </button>
       </div>
     </>

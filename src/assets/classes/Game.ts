@@ -1,7 +1,7 @@
 import { Player } from "../types/Player";
 import { Coordinate, Playground } from "../types/Playground";
 
-type Action = "Right" | "Left" | "Up" | "Down";
+export type Action = "Right" | "Left" | "Up" | "Down";
 export type State = {
   player1: Player;
   player2: Player;

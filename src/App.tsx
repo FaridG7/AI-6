@@ -4,8 +4,10 @@ import { getPlayground } from "./getPlayground";
 
 const App: FC = () => {
   const { current: game } = useRef(new Game(getPlayground()));
-  const [{ player1, player2, playground, possibleActions }, setState] =
-    useState<State>(game.getState());
+  const [
+    { player1, player2, playground, possibleActions, suggestedMove },
+    setState,
+  ] = useState<State>(game.getState());
 
   const act = (action: Action) => {
     game.performAction(action);
@@ -59,9 +61,14 @@ const App: FC = () => {
           </tbody>
         </table>
       </div>
+      <h3 className="text-center p-7 text-3xl">
+        {suggestedMove
+          ? `suggested action: ${suggestedMove}`
+          : "No suggested Action"}
+      </h3>
       <div
         id="controller"
-        className="grid grid-cols-9 grid-rows-3 gap-2 p-20  place-items-center"
+        className="grid grid-cols-9 grid-rows-3 gap-2 p-10  place-items-center"
       >
         {/* Up Button */}
         <button

@@ -7,10 +7,11 @@ export type State = {
   player2: Player;
   playground: Playground;
   possibleActions: Action[];
+  suggestedMove: Action | null;
 };
 
 export class Game {
-  private playground: Playground;
+  playground: Playground;
   private uncapturedTiles: number;
   private player1: Player;
   private player2: Player;
@@ -112,12 +113,11 @@ export class Game {
     return this.uncapturedTiles === 0;
   }
 
-  private calculateBestAction(player: 1 | 2): Action | null {
-    return Game.max(player, this, 3).action;
+  calculateBestAction(player: 1 | 2): Action | null {
+    return Game.max(player, this, 1).action;
   }
 
-  // private static max(
-  static max(
+  private static max(
     player: 1 | 2,
     state: Game,
     depthLimit: number
@@ -129,6 +129,8 @@ export class Game {
         action: null,
         value: state[`player${player}`].score,
       };
+
+    console.log("mode: max"); //TEST LOG
 
     if (depthLimit < 0) {
       let extraPoints = 0;
@@ -142,6 +144,13 @@ export class Game {
         state[`player${player}`].currentTile.y === 2
       )
         extraPoints += 0.25;
+
+      //TEST LOG
+      console.log("depth limit exceeded section:");
+      console.log("playground: ");
+      console.log(state.playground);
+      console.log(state[`player${player}`].score + extraPoints);
+      //TEST LOG
       return {
         action: null,
         value: state[`player${player}`].score + extraPoints,
@@ -153,9 +162,19 @@ export class Game {
     const branches = possibleActions.map((possibleAction) => {
       const tempState = state.copy();
       tempState.move(player, possibleAction);
-      return Game.min(player, tempState, depthLimit - 1);
+      return {
+        action: possibleAction,
+        value: Game.min(player, tempState, depthLimit - 1).value,
+      };
     });
 
+    //TEST LOG
+    console.log("subtree section:");
+    console.log("playground: ");
+    console.log(state.playground);
+    console.log("branches: ");
+    console.log(branches);
+    //TEST LOG
     return branches.reduce((pre, cur) => (pre.value > cur.value ? pre : cur));
   }
 
@@ -166,11 +185,13 @@ export class Game {
     // alpha: number | "minusInfinit" = "minusInfinit",
     // beta: number | "plusInfinit" = "plusInfinit"
   ): { action: Action | null; value: number } {
+    const rival = player === 1 ? 2 : 1;
     if (state.isTerminal())
       return {
         action: null,
         value: state[`player${player}`].score,
       };
+    console.log("mode: min"); //TEST LOG
 
     if (depthLimit < 0) {
       let deducedPoints = 0;
@@ -184,20 +205,37 @@ export class Game {
         state[`player${player}`].currentTile.y === 2
       )
         deducedPoints += 0.25;
+
+      //TEST LOG
+      console.log("depth limit exceeded section:");
+      console.log("playground: ");
+      console.log(state.playground);
+      console.log(state[`player${player}`].score + deducedPoints);
+      //TEST LOG
       return {
         action: null,
         value: state[`player${player}`].score - deducedPoints,
       };
     }
 
-    const possibleActions = state.getPossibleActions(player);
+    const possibleActions = state.getPossibleActions(rival);
 
     const branches = possibleActions.map((possibleAction) => {
       const tempState = state.copy();
-      tempState.move(player, possibleAction);
-      return Game.max(player, tempState, depthLimit - 1);
+      tempState.move(rival, possibleAction);
+      return {
+        action: possibleAction,
+        value: Game.max(player, tempState, depthLimit - 1).value,
+      };
     });
 
+    //TEST LOG
+    console.log("subtree section:");
+    console.log("playground: ");
+    console.log(state.playground);
+    console.log("branches: ");
+    console.log(branches);
+    //TEST LOG
     return branches.reduce((pre, cur) => (pre.value < cur.value ? pre : cur));
   }
 
@@ -209,6 +247,7 @@ export class Game {
     }
     this.move(1, action);
     const bestP2Action = this.calculateBestAction(2);
+    console.log(bestP2Action);
     if (bestP2Action) this.move(2, bestP2Action);
   }
   getState(): State {
@@ -217,6 +256,7 @@ export class Game {
       player2: this.player2,
       playground: this.playground,
       possibleActions: this.getPossibleActions(),
+      suggestedMove: this.calculateBestAction(1),
     };
   }
   isFinished() {

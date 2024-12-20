@@ -113,15 +113,14 @@ export class Game {
   }
 
   private calculateBestAction(player: 1 | 2): Action | null {
-    const pa = this.getPossibleActions(player);
-    return pa[Math.floor(Math.random() * pa.length)];
-    // return Game.max(player, this, 3).action;
+    return Game.max(player, this, 3).action;
   }
 
-  private static max(
+  // private static max(
+  static max(
     player: 1 | 2,
     state: Game,
-    allowedDepth: number
+    depthLimit: number
     // alpha: number | "minusInfinit" = "minusInfinit",
     // beta: number | "plusInfinit" = "plusInfinit"
   ): { action: Action | null; value: number } {
@@ -131,14 +130,30 @@ export class Game {
         value: state[`player${player}`].score,
       };
 
-    if (allowedDepth < 0) return { action: null, value: 2 }; //TODO: needs heuristic value
+    if (depthLimit < 0) {
+      let extraPoints = 0;
+      if (
+        state[`player${player}`].currentTile.x === 1 ||
+        state[`player${player}`].currentTile.x === 2
+      )
+        extraPoints += 0.25;
+      if (
+        state[`player${player}`].currentTile.y === 1 ||
+        state[`player${player}`].currentTile.y === 2
+      )
+        extraPoints += 0.25;
+      return {
+        action: null,
+        value: state[`player${player}`].score + extraPoints,
+      };
+    }
 
     const possibleActions = state.getPossibleActions(player);
 
     const branches = possibleActions.map((possibleAction) => {
       const tempState = state.copy();
       tempState.move(player, possibleAction);
-      return Game.min(player, tempState, allowedDepth - 1);
+      return Game.min(player, tempState, depthLimit - 1);
     });
 
     return branches.reduce((pre, cur) => (pre.value > cur.value ? pre : cur));
@@ -147,7 +162,7 @@ export class Game {
   private static min(
     player: 1 | 2,
     state: Game,
-    allowedDepth: number
+    depthLimit: number
     // alpha: number | "minusInfinit" = "minusInfinit",
     // beta: number | "plusInfinit" = "plusInfinit"
   ): { action: Action | null; value: number } {
@@ -157,14 +172,30 @@ export class Game {
         value: state[`player${player}`].score,
       };
 
-    if (allowedDepth < 0) return { action: null, value: 2 }; //TODO: needs heuristic value
+    if (depthLimit < 0) {
+      let deducedPoints = 0;
+      if (
+        state[`player${player}`].currentTile.x === 1 ||
+        state[`player${player}`].currentTile.x === 2
+      )
+        deducedPoints += 0.25;
+      if (
+        state[`player${player}`].currentTile.y === 1 ||
+        state[`player${player}`].currentTile.y === 2
+      )
+        deducedPoints += 0.25;
+      return {
+        action: null,
+        value: state[`player${player}`].score - deducedPoints,
+      };
+    }
 
     const possibleActions = state.getPossibleActions(player);
 
     const branches = possibleActions.map((possibleAction) => {
       const tempState = state.copy();
       tempState.move(player, possibleAction);
-      return Game.max(player, tempState, allowedDepth - 1);
+      return Game.max(player, tempState, depthLimit - 1);
     });
 
     return branches.reduce((pre, cur) => (pre.value < cur.value ? pre : cur));

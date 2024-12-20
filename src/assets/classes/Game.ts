@@ -91,7 +91,7 @@ export class Game {
     const consequenceTiles = this.getConsequences(player.currentTile);
 
     const allActions: Action[] = ["Right", "Left", "Up", "Down"];
-    const r = allActions.filter((action) => {
+    return allActions.filter((action) => {
       if (
         consequenceTiles[action].x < 0 ||
         consequenceTiles[action].x > 3 ||
@@ -106,8 +106,6 @@ export class Game {
         return false;
       else return true;
     });
-
-    return r;
   }
 
   private isTerminal(): boolean {
@@ -173,13 +171,14 @@ export class Game {
   }
 
   performAction(action: Action) {
-    this.move(1, action);
-    const bestP2Action = this.calculateBestAction(2);
-    if (bestP2Action) this.move(2, bestP2Action);
-    else
+    if (this.isTerminal()) {
       throw new Error(
         "performAction: trying to perform an action while the game is finished"
       );
+    }
+    this.move(1, action);
+    const bestP2Action = this.calculateBestAction(2);
+    if (bestP2Action) this.move(2, bestP2Action);
   }
   getState(): State {
     return {

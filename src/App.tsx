@@ -14,7 +14,7 @@ const App: FC = () => {
 
   return (
     <>
-      <h1 className="bg-red-700 text-center text-4xl py-3">Beat AI</h1>
+      <h1 className="bg-red-700 text-center text-4xl py-3">Beat the AI</h1>
       <div id="scoreboard" className="my-10">
         <span className="text-center block text-xl m-3">
           {player1.name}: {player1.score}

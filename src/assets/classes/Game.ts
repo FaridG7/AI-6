@@ -65,9 +65,9 @@ export class Game {
     else {
       player.steps.push({ from: player.currentTile, to: to });
       player.currentTile = { ...to };
-      if (!this.playground[to.x][to.y].captured) {
-        player.score += this.playground[to.x][to.y].score;
-        this.playground[to.x][to.y].captured = playerNumber;
+      if (!this.playground[to.y][to.x].captured) {
+        player.score += this.playground[to.y][to.x].score;
+        this.playground[to.y][to.x].captured = playerNumber;
         this.uncapturedTiles--;
       }
     }
@@ -86,18 +86,28 @@ export class Game {
     const player = playerNumber === 1 ? this.player1 : this.player2;
     const rival = playerNumber === 1 ? this.player2 : this.player1;
 
-    const consequences = this.getConsequences(player.currentTile);
+    if (this.isTerminal()) return [];
+
+    const consequenceTiles = this.getConsequences(player.currentTile);
 
     const allActions: Action[] = ["Right", "Left", "Up", "Down"];
-    return allActions.filter(
-      (action) =>
-        consequences[action].x >= 0 &&
-        consequences[action].x <= 3 &&
-        consequences[action].y >= 0 &&
-        consequences[action].y <= 3 &&
-        consequences[action].x !== rival.currentTile.x &&
-        consequences[action].y !== rival.currentTile.y
-    );
+    const r = allActions.filter((action) => {
+      if (
+        consequenceTiles[action].x < 0 ||
+        consequenceTiles[action].x > 3 ||
+        consequenceTiles[action].y < 0 ||
+        consequenceTiles[action].y > 3
+      ) {
+        return false;
+      } else if (
+        consequenceTiles[action].x === rival.currentTile.x &&
+        consequenceTiles[action].y === rival.currentTile.y
+      )
+        return false;
+      else return true;
+    });
+
+    return r;
   }
 
   private isTerminal(): boolean {
@@ -105,7 +115,9 @@ export class Game {
   }
 
   private calculateBestAction(player: 1 | 2): Action | null {
-    return Game.max(player, this, 3).action;
+    const pa = this.getPossibleActions(player);
+    return pa[Math.floor(Math.random() * pa.length)];
+    // return Game.max(player, this, 3).action;
   }
 
   private static max(

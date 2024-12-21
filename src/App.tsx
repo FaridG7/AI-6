@@ -19,11 +19,9 @@ const App: FC = () => {
   const scoreboard = (
     <div id="scoreboard" className="my-10">
       <span className="text-center block text-xl m-3">
-        {player1.name}: {player1.score}
+        Player: {player1.score}
       </span>
-      <span className="text-center block text-xl m-3">
-        {player2.name}: {player2.score}
-      </span>
+      <span className="text-center block text-xl m-3">AI: {player2.score}</span>
     </div>
   );
 

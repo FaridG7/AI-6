@@ -5,30 +5,28 @@ export type Action = "Right" | "Left" | "Up" | "Down";
 export type State = {
   player1: Player;
   player2: Player;
+  turn: 1 | 2;
   playground: Playground;
   possibleActions: Action[];
-  suggestedMove: Action | null;
+  suggestedAction: Action | null;
 };
 
-export class Game {
-  playground: Playground;
+class PartialGame {
+  private playground: Playground;
   private uncapturedTiles: number;
-  private player1: Player;
-  private player2: Player;
+  private player1: { score: number; currentTile: Coordinate };
+  private player2: { score: number; currentTile: Coordinate };
+  private turn: 1 | 2;
 
   constructor(
     playground: Playground,
     uncapturedTiles: number = 14,
-    player1: Player = {
-      name: "Player",
+    player1 = {
       score: 0,
-      steps: [],
       currentTile: { x: 0, y: 0 },
     },
-    player2: Player = {
-      name: "AI",
+    player2 = {
       score: 0,
-      steps: [],
       currentTile: { x: 3, y: 3 },
     }
   ) {
@@ -36,60 +34,73 @@ export class Game {
     this.uncapturedTiles = uncapturedTiles;
     this.player1 = player1;
     this.player2 = player2;
+    this.turn = 1;
   }
 
-  copy() {
-    return new Game(
-      this.playground.map((row) =>
-        row.map((tile) => {
-          return { ...tile };
-        })
-      ),
-      this.uncapturedTiles,
-      { ...this.player1 },
-      { ...this.player2 }
-    );
+  getPlayer1() {
+    return this.player1;
+  }
+  getPlayer2() {
+    return this.player2;
   }
 
-  private move(playerNumber: 1 | 2, action: Action): void {
-    const player = playerNumber === 1 ? this.player1 : this.player2;
-    const rival = playerNumber === 1 ? this.player2 : this.player1;
+  move(action: Action): void {
+    const player = this.turn === 1 ? this.player1 : this.player2;
 
-    const to: Coordinate = this.getConsequences(player.currentTile)[action];
+    const possibleActions = this.getPossibleActions();
+    const to = {
+      Right: { x: player.currentTile.x + 1, y: player.currentTile.y },
+      Left: { x: player.currentTile.x - 1, y: player.currentTile.y },
+      Up: { x: player.currentTile.x, y: player.currentTile.y - 1 },
+      Down: { x: player.currentTile.x, y: player.currentTile.y + 1 },
+    }[action];
 
-    if (to.x < 0 || to.y < 0 || to.x > 3 || to.y > 3)
-      throw new Error("P1move: impossible action");
-    else if (to.x === rival.currentTile.x && to.y === rival.currentTile.y)
-      throw new Error("P1move: P2 is blocking you");
-    else if (to.x === player.currentTile.x && to.y === player.currentTile.y)
-      throw new Error("P1move: you can't stay still");
-    else {
-      player.steps.push({ from: player.currentTile, to: to });
+    if (possibleActions.includes(action)) {
       player.currentTile = { ...to };
       if (!this.playground[to.y][to.x].captured) {
         player.score += this.playground[to.y][to.x].score;
-        this.playground[to.y][to.x].captured = playerNumber;
+        this.playground[to.y][to.x].captured = this.turn;
         this.uncapturedTiles--;
+        this.turn = this.turn === 1 ? 2 : 1;
       }
+    } else {
+      throw new Error("move: impossible action requested");
     }
   }
 
-  private getConsequences(from: Coordinate) {
-    return {
-      Right: { x: from.x + 1, y: from.y },
-      Left: { x: from.x - 1, y: from.y },
-      Up: { x: from.x, y: from.y - 1 },
-      Down: { x: from.x, y: from.y + 1 },
-    };
+  getChilds() {
+    const possibleActions = this.getPossibleActions();
+
+    return possibleActions.map((action) => {
+      const child = new PartialGame(
+        this.playground.map((row) =>
+          row.map((tile) => {
+            return { ...tile };
+          })
+        ),
+        this.uncapturedTiles,
+        { ...this.player1 },
+        { ...this.player2 }
+      );
+
+      child.move(action);
+
+      return { action, child };
+    });
   }
 
-  getPossibleActions(playerNumber: 1 | 2 = 1): Action[] {
-    const player = playerNumber === 1 ? this.player1 : this.player2;
-    const rival = playerNumber === 1 ? this.player2 : this.player1;
+  private getPossibleActions(): Action[] {
+    const player = this.turn === 1 ? this.player1 : this.player2;
+    const rival = this.turn === 1 ? this.player2 : this.player1;
 
     if (this.isTerminal()) return [];
 
-    const consequenceTiles = this.getConsequences(player.currentTile);
+    const consequenceTiles = {
+      Right: { x: player.currentTile.x + 1, y: player.currentTile.y },
+      Left: { x: player.currentTile.x - 1, y: player.currentTile.y },
+      Up: { x: player.currentTile.x, y: player.currentTile.y - 1 },
+      Down: { x: player.currentTile.x, y: player.currentTile.y + 1 },
+    };
 
     const allActions: Action[] = ["Right", "Left", "Up", "Down"];
     return allActions.filter((action) => {
@@ -113,191 +124,218 @@ export class Game {
     return this.uncapturedTiles === 0;
   }
 
-  calculateBestAction(player: 1 | 2): Action | null {
-    return Game.max(player, this, 10).action;
-  }
-
-  private static max(
-    player: 1 | 2,
-    state: Game,
+  static minmax(
+    playerNumber: 1 | 2,
+    node: PartialGame,
+    isMaximizingPlayer: boolean,
     depthLimit: number,
-    alpha: number | undefined = undefined
-  ): {
-    action: Action | null;
-    value: number;
-    alpha: number | undefined;
-  } {
-    if (state.isTerminal())
-      return {
-        action: null,
-        value: state[`player${player}`].score,
-        alpha:
-          alpha === undefined || alpha > state[`player${player}`].score
-            ? state[`player${player}`].score
-            : alpha,
-      };
+    alpha: number,
+    beta: number
+  ): number {
+    const player = playerNumber === 1 ? node.getPlayer1() : node.getPlayer2();
+
+    if (node.isTerminal()) return player.score;
 
     if (depthLimit < 0) {
-      let extraPoints = 0;
-      if (
-        state[`player${player}`].currentTile.x === 1 ||
-        state[`player${player}`].currentTile.x === 2
-      )
-        extraPoints += 0.25;
-      if (
-        state[`player${player}`].currentTile.y === 1 ||
-        state[`player${player}`].currentTile.y === 2
-      )
-        extraPoints += 0.25;
+      let heuristicValue = 0;
+      if (player.currentTile.x === 1 || player.currentTile.x === 2)
+        heuristicValue += isMaximizingPlayer ? 0.25 : -0.25;
+      if (player.currentTile.y === 1 || player.currentTile.y === 2)
+        heuristicValue += isMaximizingPlayer ? 0.25 : -0.25;
 
-      return {
-        action: null,
-        value: state[`player${player}`].score + extraPoints,
-        alpha:
-          alpha === undefined ||
-          alpha > state[`player${player}`].score + extraPoints
-            ? state[`player${player}`].score + extraPoints
-            : alpha,
-      };
+      return player.score + heuristicValue;
     }
 
-    const possibleActions = state.getPossibleActions(player);
-
-    let bestAction: { action: Action | null; value: number | "minusInfinit" } =
-      { action: null, value: "minusInfinit" };
-
-    for (const action of possibleActions) {
-      const tempState = state.copy();
-      tempState.move(player, action);
-      const { value: actionValue, alpha: newAlpha } = Game.min(
-        player,
-        tempState,
-        depthLimit - 1,
-        alpha
-      );
-
-      if (
-        bestAction.value === "minusInfinit" ||
-        bestAction.value < actionValue
-      ) {
-        bestAction = { action: action, value: actionValue };
-        alpha = newAlpha;
+    if (isMaximizingPlayer) {
+      let bestValue: number = Number.NEGATIVE_INFINITY;
+      for (const { child } of node.getChilds()) {
+        const value = PartialGame.minmax(
+          playerNumber,
+          child,
+          false,
+          depthLimit - 1,
+          alpha,
+          beta
+        );
+        bestValue = Math.max(value, bestValue);
+        alpha = Math.max(alpha, bestValue);
+        if (beta <= alpha) break;
       }
-      if (alpha !== undefined && actionValue > alpha) break;
+      return bestValue;
+    } else {
+      let bestValue: number = Number.POSITIVE_INFINITY;
+      for (const { child } of node.getChilds()) {
+        const value = PartialGame.minmax(
+          playerNumber,
+          child,
+          true,
+          depthLimit - 1,
+          alpha,
+          beta
+        );
+        bestValue = Math.min(value, bestValue);
+        beta = Math.min(beta, bestValue);
+        if (beta <= alpha) break;
+      }
+      return bestValue;
     }
-    return {
-      ...bestAction,
-      alpha:
-        alpha === undefined || alpha > (bestAction.value as number)
-          ? bestAction.value
-          : alpha,
-    } as {
-      action: Action | null;
-      value: number;
-      alpha: number | undefined;
-    };
+  }
+}
+
+export class Game {
+  private playground: Playground;
+  private uncapturedTiles: number;
+  private player1: Player;
+  private player2: Player;
+  private turn: 1 | 2;
+
+  constructor(
+    playground: Playground,
+    uncapturedTiles: number = 14,
+    player1: Player = {
+      name: "Player",
+      score: 0,
+      steps: [],
+      currentTile: { x: 0, y: 0 },
+    },
+    player2: Player = {
+      name: "AI",
+      score: 0,
+      steps: [],
+      currentTile: { x: 3, y: 3 },
+    }
+  ) {
+    this.playground = playground;
+    this.uncapturedTiles = uncapturedTiles;
+    this.player1 = player1;
+    this.player2 = player2;
+    this.turn = 1;
   }
 
-  private static min(
-    player: 1 | 2,
-    state: Game,
-    depthLimit: number,
-    alpha: number | undefined = undefined
-  ): {
-    action: Action | null;
-    value: number;
-    alpha: number | undefined;
-  } {
-    const rival = player === 1 ? 2 : 1;
-    if (state.isTerminal())
-      return {
-        action: null,
-        value: state[`player${player}`].score,
-        alpha:
-          alpha === undefined || alpha < state[`player${player}`].score
-            ? state[`player${player}`].score
-            : alpha,
-      };
-
-    if (depthLimit < 0) {
-      let deducedPoints = 0;
-      if (
-        state[`player${player}`].currentTile.x === 1 ||
-        state[`player${player}`].currentTile.x === 2
-      )
-        deducedPoints += 0.25;
-      if (
-        state[`player${player}`].currentTile.y === 1 ||
-        state[`player${player}`].currentTile.y === 2
-      )
-        deducedPoints += 0.25;
-
-      return {
-        action: null,
-        value: state[`player${player}`].score - deducedPoints,
-        alpha:
-          alpha === undefined ||
-          alpha < state[`player${player}`].score - deducedPoints
-            ? state[`player${player}`].score - deducedPoints
-            : alpha,
-      };
-    }
-
-    const possibleActions = state.getPossibleActions(rival);
-
-    let bestAction: { action: Action | null; value: number | "plusInfinit" } =
-      { action: null, value: "plusInfinit" };
-
-    for (const action of possibleActions) {
-      const tempState = state.copy();
-      tempState.move(player, action);
-      const { value: actionValue, alpha: newAlpha } = Game.max(
-        player,
-        tempState,
-        depthLimit - 1,
-        alpha
-      );
-
-      if (
-        bestAction.value === "plusInfinit" ||
-        bestAction.value < actionValue
-      ) {
-        bestAction = { action: action, value: actionValue };
-        alpha = newAlpha;
-      }
-      if (alpha !== undefined && actionValue > alpha) break;
-    }
-    return {
-      ...bestAction,
-      alpha:
-        alpha === undefined || alpha < (bestAction.value as number)
-          ? bestAction.value
-          : alpha,
-    } as {
-      action: Action | null;
-      value: number;
-      alpha: number | undefined;
-    };
+  getPlayer1() {
+    return this.player1;
   }
 
-  performAction(action: Action) {
-    if (this.isTerminal()) {
+  getPlayer2() {
+    return this.player2;
+  }
+
+  getTurn() {
+    return this.turn;
+  }
+
+  move(action: Action): void {
+    const player = this.turn === 1 ? this.player1 : this.player2;
+
+    const possibleActions = this.getPossibleActions();
+    const to = {
+      Right: { x: player.currentTile.x + 1, y: player.currentTile.y },
+      Left: { x: player.currentTile.x - 1, y: player.currentTile.y },
+      Up: { x: player.currentTile.x, y: player.currentTile.y - 1 },
+      Down: { x: player.currentTile.x, y: player.currentTile.y + 1 },
+    }[action];
+
+    if (possibleActions.includes(action)) {
+      player.steps.push(action);
+      player.currentTile = { ...to };
+      if (!this.playground[to.y][to.x].captured) {
+        player.score += this.playground[to.y][to.x].score;
+        this.playground[to.y][to.x].captured = this.turn;
+        this.uncapturedTiles--;
+        this.turn = this.turn === 1 ? 2 : 1;
+      }
+    } else {
+      throw new Error("move: impossible action requested");
+    }
+  }
+
+  getChilds() {
+    const possibleActions = this.getPossibleActions();
+
+    return possibleActions.map((action) => {
+      const child = new PartialGame(
+        this.playground.map((row) =>
+          row.map((tile) => {
+            return { ...tile };
+          })
+        ),
+        this.uncapturedTiles,
+        { ...this.player1 },
+        { ...this.player2 }
+      );
+
+      child.move(action);
+
+      return { action, child };
+    });
+  }
+
+  getPossibleActions(): Action[] {
+    const player = this.turn === 1 ? this.player1 : this.player2;
+    const rival = this.turn === 1 ? this.player2 : this.player1;
+
+    if (this.isTerminal()) return [];
+
+    const consequenceTiles = {
+      Right: { x: player.currentTile.x + 1, y: player.currentTile.y },
+      Left: { x: player.currentTile.x - 1, y: player.currentTile.y },
+      Up: { x: player.currentTile.x, y: player.currentTile.y - 1 },
+      Down: { x: player.currentTile.x, y: player.currentTile.y + 1 },
+    };
+
+    const allActions: Action[] = ["Right", "Left", "Up", "Down"];
+    return allActions.filter((action) => {
+      if (
+        consequenceTiles[action].x < 0 ||
+        consequenceTiles[action].x > 3 ||
+        consequenceTiles[action].y < 0 ||
+        consequenceTiles[action].y > 3
+      ) {
+        return false;
+      } else if (
+        consequenceTiles[action].x === rival.currentTile.x &&
+        consequenceTiles[action].y === rival.currentTile.y
+      )
+        return false;
+      else return true;
+    });
+  }
+
+  private isTerminal(): boolean {
+    return this.uncapturedTiles === 0;
+  }
+
+  calculateBestAction(): Action | null {
+    if (this.isTerminal())
       throw new Error(
-        "performAction: trying to perform an action while the game is finished"
+        "calculateBestAction: called when game is in terminal state"
       );
-    }
-    this.move(1, action);
-    const bestP2Action = this.calculateBestAction(2);
-    console.log(bestP2Action);
-    if (bestP2Action) this.move(2, bestP2Action);
+
+    return this.getChilds()
+      .map(({ action, child }) => {
+        return {
+          action: action,
+          value: PartialGame.minmax(
+            this.turn,
+            child,
+            false,
+            5,
+            Number.NEGATIVE_INFINITY,
+            Number.POSITIVE_INFINITY
+          ),
+        };
+      })
+      .reduce((pre, cur) => (pre.value < cur.value ? cur : pre)).action;
   }
+
   getState(): State {
     return {
       player1: this.player1,
       player2: this.player2,
+      turn: this.turn,
       playground: this.playground,
       possibleActions: this.getPossibleActions(),
-      suggestedMove: this.calculateBestAction(1),
+      suggestedAction: "Down",
     };
   }
   isFinished() {

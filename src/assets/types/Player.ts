@@ -1,13 +1,10 @@
+import { Action } from "../classes/Game";
 import { Coordinate } from "./Playground";
 
-export type step = {
-  from: Coordinate;
-  to: Coordinate;
-};
 
 export type Player = {
   name: string;
   score: number;
-  steps: step[];
+  steps: Action[];
   currentTile: Coordinate;
 };

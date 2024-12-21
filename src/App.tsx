@@ -4,11 +4,15 @@ import { getPlayground } from "./getPlayground";
 
 const App: FC = () => {
   const { current: game } = useRef(new Game(getPlayground()));
-  const [{ player1, player2, playground, possibleActions }, setState] =
-    useState<State>(game.getState());
+  const [
+    { player1, player2, turn, playground, possibleActions, suggestedAction },
+    setState,
+  ] = useState<State>(game.getState());
+
+  const [hint, setHint] = useState<boolean>(false);
 
   const act = (action: Action) => {
-    game.performAction(action);
+    game.move(action);
     return game.getState();
   };
 
@@ -95,8 +99,23 @@ const App: FC = () => {
         {board}
       </div>
       <div
+        id="helpSection"
+        className="flex flex-row justify-center items-center p-10"
+      >
+        {turn === 1 ? (
+          <button
+            className="bg-orange-600 hover:bg-orange-700 text-center text-xl p-3"
+            onClick={() => setHint((hint) => !hint)}
+          >
+            {hint ? suggestedAction : "Suggest Action"}
+          </button>
+        ) : (
+          <div className="w-16 h-16 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        )}
+      </div>
+      <div
         id="controller"
-        className="grid grid-cols-9 grid-rows-3 gap-2 p-10  place-items-center mt-10"
+        className="grid grid-cols-9 grid-rows-3 gap-2 p-10 place-items-center"
       >
         {/* Up Button */}
         <button

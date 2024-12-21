@@ -114,23 +114,28 @@ export class Game {
   }
 
   calculateBestAction(player: 1 | 2): Action | null {
-    return Game.max(player, this, 1).action;
+    return Game.max(player, this, 10).action;
   }
 
   private static max(
     player: 1 | 2,
     state: Game,
-    depthLimit: number
-    // alpha: number | "minusInfinit" = "minusInfinit",
-    // beta: number | "plusInfinit" = "plusInfinit"
-  ): { action: Action | null; value: number } {
+    depthLimit: number,
+    alpha: number | undefined = undefined
+  ): {
+    action: Action | null;
+    value: number;
+    alpha: number | undefined;
+  } {
     if (state.isTerminal())
       return {
         action: null,
         value: state[`player${player}`].score,
+        alpha:
+          alpha === undefined || alpha > state[`player${player}`].score
+            ? state[`player${player}`].score
+            : alpha,
       };
-
-    console.log("mode: max"); //TEST LOG
 
     if (depthLimit < 0) {
       let extraPoints = 0;
@@ -145,53 +150,74 @@ export class Game {
       )
         extraPoints += 0.25;
 
-      //TEST LOG
-      console.log("depth limit exceeded section:");
-      console.log("playground: ");
-      console.log(state.playground);
-      console.log(state[`player${player}`].score + extraPoints);
-      //TEST LOG
       return {
         action: null,
         value: state[`player${player}`].score + extraPoints,
+        alpha:
+          alpha === undefined ||
+          alpha > state[`player${player}`].score + extraPoints
+            ? state[`player${player}`].score + extraPoints
+            : alpha,
       };
     }
 
     const possibleActions = state.getPossibleActions(player);
 
-    const branches = possibleActions.map((possibleAction) => {
-      const tempState = state.copy();
-      tempState.move(player, possibleAction);
-      return {
-        action: possibleAction,
-        value: Game.min(player, tempState, depthLimit - 1).value,
-      };
-    });
+    let bestAction: { action: Action | null; value: number | "minusInfinit" } =
+      { action: null, value: "minusInfinit" };
 
-    //TEST LOG
-    console.log("subtree section:");
-    console.log("playground: ");
-    console.log(state.playground);
-    console.log("branches: ");
-    console.log(branches);
-    //TEST LOG
-    return branches.reduce((pre, cur) => (pre.value > cur.value ? pre : cur));
+    for (const action of possibleActions) {
+      const tempState = state.copy();
+      tempState.move(player, action);
+      const { value: actionValue, alpha: newAlpha } = Game.min(
+        player,
+        tempState,
+        depthLimit - 1,
+        alpha
+      );
+
+      if (
+        bestAction.value === "minusInfinit" ||
+        bestAction.value < actionValue
+      ) {
+        bestAction = { action: action, value: actionValue };
+        alpha = newAlpha;
+      }
+      if (alpha !== undefined && actionValue > alpha) break;
+    }
+    return {
+      ...bestAction,
+      alpha:
+        alpha === undefined || alpha > (bestAction.value as number)
+          ? bestAction.value
+          : alpha,
+    } as {
+      action: Action | null;
+      value: number;
+      alpha: number | undefined;
+    };
   }
 
   private static min(
     player: 1 | 2,
     state: Game,
-    depthLimit: number
-    // alpha: number | "minusInfinit" = "minusInfinit",
-    // beta: number | "plusInfinit" = "plusInfinit"
-  ): { action: Action | null; value: number } {
+    depthLimit: number,
+    alpha: number | undefined = undefined
+  ): {
+    action: Action | null;
+    value: number;
+    alpha: number | undefined;
+  } {
     const rival = player === 1 ? 2 : 1;
     if (state.isTerminal())
       return {
         action: null,
         value: state[`player${player}`].score,
+        alpha:
+          alpha === undefined || alpha < state[`player${player}`].score
+            ? state[`player${player}`].score
+            : alpha,
       };
-    console.log("mode: min"); //TEST LOG
 
     if (depthLimit < 0) {
       let deducedPoints = 0;
@@ -206,37 +232,52 @@ export class Game {
       )
         deducedPoints += 0.25;
 
-      //TEST LOG
-      console.log("depth limit exceeded section:");
-      console.log("playground: ");
-      console.log(state.playground);
-      console.log(state[`player${player}`].score + deducedPoints);
-      //TEST LOG
       return {
         action: null,
         value: state[`player${player}`].score - deducedPoints,
+        alpha:
+          alpha === undefined ||
+          alpha < state[`player${player}`].score - deducedPoints
+            ? state[`player${player}`].score - deducedPoints
+            : alpha,
       };
     }
 
     const possibleActions = state.getPossibleActions(rival);
 
-    const branches = possibleActions.map((possibleAction) => {
-      const tempState = state.copy();
-      tempState.move(rival, possibleAction);
-      return {
-        action: possibleAction,
-        value: Game.max(player, tempState, depthLimit - 1).value,
-      };
-    });
+    let bestAction: { action: Action | null; value: number | "plusInfinit" } =
+      { action: null, value: "plusInfinit" };
 
-    //TEST LOG
-    console.log("subtree section:");
-    console.log("playground: ");
-    console.log(state.playground);
-    console.log("branches: ");
-    console.log(branches);
-    //TEST LOG
-    return branches.reduce((pre, cur) => (pre.value < cur.value ? pre : cur));
+    for (const action of possibleActions) {
+      const tempState = state.copy();
+      tempState.move(player, action);
+      const { value: actionValue, alpha: newAlpha } = Game.max(
+        player,
+        tempState,
+        depthLimit - 1,
+        alpha
+      );
+
+      if (
+        bestAction.value === "plusInfinit" ||
+        bestAction.value < actionValue
+      ) {
+        bestAction = { action: action, value: actionValue };
+        alpha = newAlpha;
+      }
+      if (alpha !== undefined && actionValue > alpha) break;
+    }
+    return {
+      ...bestAction,
+      alpha:
+        alpha === undefined || alpha < (bestAction.value as number)
+          ? bestAction.value
+          : alpha,
+    } as {
+      action: Action | null;
+      value: number;
+      alpha: number | undefined;
+    };
   }
 
   performAction(action: Action) {

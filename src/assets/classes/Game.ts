@@ -28,13 +28,14 @@ export class Game {
     player2: Player = {
       score: 0,
       currentTile: { x: 3, y: 3 },
-    }
+    },
+    turn: 1 | 2 = 1
   ) {
     this.playground = playground;
     this.uncapturedTiles = uncapturedTiles;
     this.player1 = player1;
     this.player2 = player2;
-    this.turn = 1;
+    this.turn = turn;
   }
 
   getPlayer1() {
@@ -85,7 +86,8 @@ export class Game {
         ),
         this.uncapturedTiles,
         { ...this.player1 },
-        { ...this.player2 }
+        { ...this.player2 },
+        this.turn
       );
 
       child.move(action);

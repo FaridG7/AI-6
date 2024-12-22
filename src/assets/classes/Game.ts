@@ -50,10 +50,13 @@ export class Game {
     return this.turn;
   }
 
+  getThis() {
+    return this;
+  }
+
   move(action: Action): void {
     const player = this.turn === 1 ? this.player1 : this.player2;
 
-    const possibleActions = this.getPossibleActions();
     const to = {
       Right: { x: player.currentTile.x + 1, y: player.currentTile.y },
       Left: { x: player.currentTile.x - 1, y: player.currentTile.y },
@@ -61,14 +64,14 @@ export class Game {
       Down: { x: player.currentTile.x, y: player.currentTile.y + 1 },
     }[action];
 
-    if (possibleActions.includes(action)) {
+    if (this.getPossibleActions().includes(action)) {
       player.currentTile = { ...to };
       if (!this.playground[to.y][to.x].captured) {
         player.score += this.playground[to.y][to.x].score;
         this.playground[to.y][to.x].captured = this.turn;
         this.uncapturedTiles--;
-        this.turn = this.turn === 1 ? 2 : 1;
       }
+      this.turn = this.turn === 1 ? 2 : 1;
     } else {
       throw new Error("move: impossible action requested");
     }
@@ -221,6 +224,7 @@ export class Game {
       suggestedAction: this.calculateBestAction(),
     };
   }
+
   isFinished() {
     return this.isTerminal();
   }

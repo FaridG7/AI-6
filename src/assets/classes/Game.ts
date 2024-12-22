@@ -192,10 +192,7 @@ export class Game {
   }
 
   calculateBestAction(): Action | null {
-    if (this.isTerminal())
-      throw new Error(
-        "calculateBestAction: called when game is in terminal state"
-      );
+    if (this.isTerminal()) return null;
 
     return this.getChilds()
       .map(({ action, child }) => {
@@ -205,7 +202,7 @@ export class Game {
             this.turn,
             child,
             false,
-            5,
+            10,
             Number.NEGATIVE_INFINITY,
             Number.POSITIVE_INFINITY
           ),

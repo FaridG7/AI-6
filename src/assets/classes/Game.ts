@@ -17,6 +17,7 @@ export class Game {
   private player1: Player;
   private player2: Player;
   private turn: 1 | 2;
+  private depthLimit: number;
 
   constructor(
     playground: Playground,
@@ -29,13 +30,15 @@ export class Game {
       score: 0,
       currentTile: { x: 3, y: 3 },
     },
-    turn: 1 | 2 = 1
+    turn: 1 | 2 = 1,
+    depthLimit: number = 14
   ) {
     this.playground = playground;
     this.uncapturedTiles = uncapturedTiles;
     this.player1 = player1;
     this.player2 = player2;
     this.turn = turn;
+    this.depthLimit = depthLimit;
   }
 
   getPlayer1() {
@@ -202,7 +205,7 @@ export class Game {
             this.turn,
             child,
             false,
-            10,
+            this.depthLimit,
             Number.NEGATIVE_INFINITY,
             Number.POSITIVE_INFINITY
           ),

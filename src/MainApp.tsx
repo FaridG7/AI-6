@@ -2,8 +2,37 @@ import { FC, useRef, useState } from "react";
 import { Action, Game, State } from "./assets/classes/Game";
 import { Playground } from "./assets/types/Playground";
 
-const winMessages = ["Congratulations! You Win", "How Dare You Beat My AI?!"];
-
+const winMessages = [
+  "Congratulations! You Win",
+  "How Dare You Beat My AI?!",
+  "You Got Me!",
+  "Well Done",
+  "Say Congrats to AI Bully",
+  "AI: この敗北を復讐するつもりだ",
+  "Let Me Guess, You Tried This 100 Times",
+  "Easy Huh? Why Don't You Play Sekiro",
+  "GG",
+];
+const loseMessages = [
+  "Guess What, You Lose",
+  "Aww, You lost",
+  "Huh, My AI is Smarter!",
+  "My AI is Just Better!",
+  "You Lost, Please Don't Cry",
+  "You Lost, as Usual",
+  "You Lost, Just Like You Do in Life",
+  "You Lost, Just Like in Real Life",
+  "Try Harder Next Time",
+  "AI: This was easy, I might tust try world dominance",
+  "AI: EZ",
+  "Nice Try",
+];
+const tieMessages = [
+  "It's a Tie",
+  "Does This Mean thatYou're Just as Good as My AI?",
+  "Congratulations! You're as Smart as an AI",
+  "GG",
+];
 const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
   const { current: game } = useRef(new Game(playground));
   const [
@@ -77,7 +106,9 @@ const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
   if (game.isFinished() && player1.score > player2.score)
     return (
       <div className="w-screen h-screen bg-green-700 flex-col flex items-center justify-center">
-        <h1 className="text-9xl mb-24">Congratulations! You Win</h1>
+        <h1 className="text-9xl mb-24 text-center">
+          {winMessages[Math.floor(Math.random() * winMessages.length)]}
+        </h1>
         {board}
         {scoreboard}
       </div>
@@ -86,7 +117,9 @@ const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
   if (game.isFinished() && player1.score < player2.score)
     return (
       <div className="w-screen h-screen bg-red-700 flex flex-col items-center justify-center">
-        <h1 className="text-9xl mb-24">Too Bad! You Lose</h1>
+        <h1 className="text-9xl mb-24 text-center">
+          {loseMessages[Math.floor(Math.random() * loseMessages.length)]}
+        </h1>
         {board}
         {scoreboard}
       </div>
@@ -95,7 +128,9 @@ const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
   if (game.isFinished() && player1.score === player2.score)
     return (
       <div className="w-screen h-screen bg-gray-600 flex flex-col items-center justify-center">
-        <h1 className="text-9xl mb-24">It's a Tie!</h1>
+        <h1 className="text-9xl mb-24 text-center">
+          {tieMessages[Math.floor(Math.random() * tieMessages.length)]}
+        </h1>
         {board}
         {scoreboard}
       </div>

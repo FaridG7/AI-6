@@ -1,6 +1,6 @@
-import { Playground } from "./assets/types/Playground";
+import { Playground } from "./types/Playground";
 
-const testPlayground: Playground = [
+export const defaultPlayground: Playground = [
   [
     { score: 0, captured: 1 },
     { score: 1, captured: null },
@@ -26,7 +26,3 @@ const testPlayground: Playground = [
     { score: 0, captured: 2 },
   ],
 ];
-
-export function getPlayground(): Playground {
-  return testPlayground;
-}

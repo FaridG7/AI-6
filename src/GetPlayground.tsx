@@ -62,6 +62,22 @@ const GetPlayGround: FC<{
         </table>
         <button
           className="bg-red-600 text-3xl p-5 m-24"
+          onClick={() => {
+            setPlayground(
+              playground.map((row) =>
+                row.map((tile) => ({
+                  ...tile,
+                  score: Math.floor(Math.random() * 9 + 1),
+                }))
+              )
+            );
+            setIsSet(true);
+          }}
+        >
+          Set Random
+        </button>
+        <button
+          className="bg-red-600 text-3xl p-5"
           onClick={() => setIsSet(true)}
         >
           Got it

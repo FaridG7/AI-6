@@ -2,6 +2,8 @@ import { FC, useRef, useState } from "react";
 import { Action, Game, State } from "./assets/classes/Game";
 import { Playground } from "./assets/types/Playground";
 
+const winMessages = ["Congratulations! You Win", "How Dare You Beat My AI?!"];
+
 const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
   const { current: game } = useRef(new Game(playground));
   const [

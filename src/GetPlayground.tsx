@@ -5,7 +5,11 @@ const GetPlayGround: FC<{
   playground: Playground;
   setPlayground: React.Dispatch<React.SetStateAction<Playground>>;
   setIsSet: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ playground, setPlayground, setIsSet }) => {
+  difficulty: "Dumb" | "Average" | "Smart";
+  setDifficulty: React.Dispatch<
+    React.SetStateAction<"Dumb" | "Average" | "Smart">
+  >;
+}> = ({ playground, setPlayground, setIsSet, difficulty, setDifficulty }) => {
   return (
     <>
       <h1 className="bg-red-700 text-center text-4xl py-3">
@@ -60,8 +64,38 @@ const GetPlayGround: FC<{
             })}
           </tbody>
         </table>
+        <div id="difficulty" className="p-6">
+          <h3 className="text-center text-3xl py-3">AI's IQ: </h3>
+          <button
+            disabled={difficulty === "Dumb"}
+            onClick={() => {
+              setDifficulty("Dumb");
+            }}
+            className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 p-5 m-10 text-xl"
+          >
+            Dumb
+          </button>
+          <button
+            disabled={difficulty === "Average"}
+            onClick={() => {
+              setDifficulty("Average");
+            }}
+            className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 p-5 m-10 text-xl"
+          >
+            Average
+          </button>
+          <button
+            disabled={difficulty === "Smart"}
+            onClick={() => {
+              setDifficulty("Smart");
+            }}
+            className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 p-5 m-10 text-xl"
+          >
+            Smart
+          </button>
+        </div>
         <button
-          className="bg-red-600 text-3xl p-5 m-24"
+          className="bg-red-600 text-3xl p-5 m-16"
           onClick={() => {
             setPlayground(
               playground.map((row) =>

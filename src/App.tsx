@@ -7,14 +7,19 @@ import MainApp from "./MainApp";
 const App: FC = () => {
   const [playground, setPlayground] = useState<Playground>(defaultPlayground);
   const [isSet, setIsSet] = useState<boolean>(false);
+  const [difficulty, setDifficulty] = useState<"Dumb" | "Average" | "Smart">(
+    "Dumb"
+  );
 
   return isSet ? (
-    <MainApp playground={playground} />
+    <MainApp playground={playground} difficulty={difficulty} />
   ) : (
     <GetPlayGround
       playground={playground}
       setPlayground={setPlayground}
       setIsSet={setIsSet}
+      difficulty={difficulty}
+      setDifficulty={setDifficulty}
     />
   );
 };

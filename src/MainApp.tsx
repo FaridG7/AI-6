@@ -33,30 +33,29 @@ const tieMessages = [
   "Congratulations! You're as Smart as an AI",
   "GG",
 ];
-const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
-  const { current: game } = useRef(new Game(playground));
+const MainApp: FC<{
+  playground: Playground;
+  difficulty: "Dumb" | "Average" | "Smart";
+}> = ({ playground, difficulty }) => {
+  const { current: game } = useRef(
+    new Game(
+      playground,
+      difficulty === "Dumb" ? 4 : difficulty === "Average" ? 8 : 14
+    )
+  );
   const [
-    {
-      player1,
-      player2,
-      turn,
-      playground: state,
-      possibleActions,
-      suggestedAction,
-    },
+    { player1, player2, turn, playground: state, possibleActions },
     setState,
   ] = useState<State>(game.getState());
 
-  const [hint, setHint] = useState<boolean>(false);
-
   const performP1Action = (action: Action) => {
+    game.move(action, true);
     setState(() => {
-      game.move(action);
       return game.getState();
     });
+    const bestAIAction = game.calculateBestAction();
+    if (bestAIAction) game.move(bestAIAction, true);
     setState(() => {
-      const bestAIAction = game.calculateBestAction();
-      if (bestAIAction) game.move(bestAIAction);
       return game.getState();
     });
   };
@@ -151,14 +150,7 @@ const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
         id="helpSection"
         className="flex flex-row justify-center items-center p-10"
       >
-        {turn === 1 ? (
-          <button
-            className="bg-orange-600 hover:bg-orange-700 text-center text-xl p-3"
-            onClick={() => setHint((hint) => !hint)}
-          >
-            {hint ? suggestedAction : "Suggest Action"}
-          </button>
-        ) : (
+        {turn === 1 || (
           <div className="w-16 h-16 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         )}
       </div>

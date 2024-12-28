@@ -8,7 +8,6 @@ export type State = {
   turn: 1 | 2;
   playground: Playground;
   possibleActions: Action[];
-  suggestedAction: Action | null;
 };
 
 export class Game {
@@ -21,6 +20,7 @@ export class Game {
 
   constructor(
     playground: Playground,
+    depthLimit: number = 14,
     uncapturedTiles: number = 14,
     player1: Player = {
       score: 0,
@@ -30,8 +30,7 @@ export class Game {
       score: 0,
       currentTile: { x: 3, y: 3 },
     },
-    turn: 1 | 2 = 1,
-    depthLimit: number = 14
+    turn: 1 | 2 = 1
   ) {
     this.playground = playground;
     this.uncapturedTiles = uncapturedTiles;
@@ -57,7 +56,8 @@ export class Game {
     return this;
   }
 
-  move(action: Action): void {
+  move(action: Action, debug: boolean = false): void {
+    if (debug) console.log("*");
     const player = this.turn === 1 ? this.player1 : this.player2;
 
     const to = {
@@ -90,11 +90,11 @@ export class Game {
             return { ...tile };
           })
         ),
+        this.depthLimit,
         this.uncapturedTiles,
         { ...this.player1 },
         { ...this.player2 },
-        this.turn,
-        this.depthLimit
+        this.turn
       );
 
       child.move(action);
@@ -223,7 +223,6 @@ export class Game {
       turn: this.turn,
       playground: this.playground,
       possibleActions: this.getPossibleActions(),
-      suggestedAction: this.calculateBestAction(),
     };
   }
 

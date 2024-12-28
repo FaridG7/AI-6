@@ -50,11 +50,15 @@ const MainApp: FC<{ playground: Playground }> = ({ playground }) => {
   const [hint, setHint] = useState<boolean>(false);
 
   const performP1Action = (action: Action) => {
-    game.move(action);
-    setState(game.getState());
-    const bestAIAction = game.calculateBestAction();
-    if (bestAIAction) game.move(bestAIAction);
-    setState(game.getState());
+    setState(() => {
+      game.move(action);
+      return game.getState();
+    });
+    setState(() => {
+      const bestAIAction = game.calculateBestAction();
+      if (bestAIAction) game.move(bestAIAction);
+      return game.getState();
+    });
   };
 
   const scoreboard = (

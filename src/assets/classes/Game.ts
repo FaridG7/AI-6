@@ -93,7 +93,8 @@ export class Game {
         this.uncapturedTiles,
         { ...this.player1 },
         { ...this.player2 },
-        this.turn
+        this.turn,
+        this.depthLimit
       );
 
       child.move(action);
@@ -146,8 +147,9 @@ export class Game {
     beta: number
   ): number {
     const player = playerNumber === 1 ? node.getPlayer1() : node.getPlayer2();
+    const rival = playerNumber === 1 ? node.getPlayer2() : node.getPlayer1();
 
-    if (node.isTerminal()) return player.score;
+    if (node.isTerminal()) return player.score - rival.score;
 
     if (depthLimit < 0) {
       let heuristicValue = 0;
@@ -156,7 +158,7 @@ export class Game {
       if (player.currentTile.y === 1 || player.currentTile.y === 2)
         heuristicValue += isMaximizingPlayer ? 0.25 : -0.25;
 
-      return player.score + heuristicValue;
+      return player.score - rival.score + heuristicValue;
     }
 
     if (isMaximizingPlayer) {
@@ -172,7 +174,7 @@ export class Game {
         );
         bestValue = Math.max(value, bestValue);
         alpha = Math.max(alpha, bestValue);
-        if (beta <= alpha) break;
+        if (beta <= bestValue) break;
       }
       return bestValue;
     } else {
@@ -188,7 +190,7 @@ export class Game {
         );
         bestValue = Math.min(value, bestValue);
         beta = Math.min(beta, bestValue);
-        if (beta <= alpha) break;
+        if (bestValue <= alpha) break;
       }
       return bestValue;
     }

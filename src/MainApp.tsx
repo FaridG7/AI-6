@@ -48,11 +48,15 @@ const MainApp: FC<{
     setState,
   ] = useState<State>(game.getState());
 
-  const performP1Action = (action: Action) => {
+  const handleP1Action = (action: Action) => {
     game.move(action, true);
     setState(() => {
       return game.getState();
     });
+    handleAIAction();
+  };
+
+  const handleAIAction = () => {
     const bestAIAction = game.calculateBestAction();
     if (bestAIAction) game.move(bestAIAction, true);
     setState(() => {
@@ -162,7 +166,7 @@ const MainApp: FC<{
         <button
           disabled={!possibleActions.includes("Up")}
           className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-1 col-start-5 text-center w-24 h-24 rounded-full flex items-center justify-center"
-          onClick={() => performP1Action("Up")}
+          onClick={() => handleP1Action("Up")}
         >
           <span className="text-7xl">&#8593;</span>
         </button>
@@ -171,7 +175,7 @@ const MainApp: FC<{
         <button
           disabled={!possibleActions.includes("Left")}
           className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-2 col-start-4 text-center w-24 h-24 rounded-full flex items-center justify-center"
-          onClick={() => performP1Action("Left")}
+          onClick={() => handleP1Action("Left")}
         >
           <span className="text-7xl pb-4">&#8592;</span>
         </button>
@@ -180,7 +184,7 @@ const MainApp: FC<{
         <button
           disabled={!possibleActions.includes("Right")}
           className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-2 col-start-6 text-center w-24 h-24 rounded-full flex items-center justify-center"
-          onClick={() => performP1Action("Right")}
+          onClick={() => handleP1Action("Right")}
         >
           <span className="text-7xl pb-4">&#8594;</span>
         </button>
@@ -189,7 +193,7 @@ const MainApp: FC<{
         <button
           disabled={!possibleActions.includes("Down")}
           className="bg-red-600 hover:bg-red-800 disabled:bg-gray-700 row-start-3 col-start-5 text-center w-24 h-24 rounded-full flex items-center justify-center"
-          onClick={() => performP1Action("Down")}
+          onClick={() => handleP1Action("Down")}
         >
           <span className="text-7xl">&#8595;</span>
         </button>
